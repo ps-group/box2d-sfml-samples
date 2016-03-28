@@ -19,6 +19,7 @@ void CApplication::EnterLoop()
         {
             if (event.type == sf::Event::Closed)
             {
+                m_scene.reset();
                 m_window.close();
                 return;
             }

@@ -4,40 +4,23 @@
 #include "Puppeteer.h"
 #include "Joint.h"
 
-struct SPuppeteerOptions
-{
-public:
-    /// Коэффициент силы трения, обычно в диапазоне [0,1].
-    float32 friction = 0;
-
-    /// Коэффициент упругости тела (эластичность), обычно в диапазоне [0,1].
-    float32 restitution = 0;
-
-    /// Плотность, обычно в кг/м^2.
-    float32 density = 1;
-
-    /// Сенсорные (призрачные) формы получают информацию о контактах,
-    /// но никогда не влияют на другие тела и не отталкивают их.
-    bool isSensor = false;
-
-    /// Статичные тела не двигаются.
-    bool isStatic = false;
-};
-
 class CPuppeteerFactory
 {
 public:
     CPuppeteerFactory(IPhysicsWorld & world);
 
-    CPuppeteerUniquePtr Make(sf::CircleShape &shape, SPuppeteerOptions const& options = SPuppeteerOptions());
-    CPuppeteerUniquePtr Make(sf::RectangleShape & shape, SPuppeteerOptions const& options = SPuppeteerOptions());
-
+    void MakeLandscape(std::vector<sf::Vector2f> const& points);
+    CPuppeteerUniquePtr MakeDynamic(sf::Transformable &entity);
+    CPuppeteerUniquePtr MakeDynamic(sf::Sprite &sprite, SMaterial const& mat);
+    CPuppeteerUniquePtr MakeStatic(sf::CircleShape &shape, SMaterial const& mat);
+    CPuppeteerUniquePtr MakeDynamic(sf::CircleShape &shape, SMaterial const& mat);
+    CPuppeteerUniquePtr MakeDynamic(sf::RectangleShape & shape, SMaterial const& mat);
     CJointUniquePtr MakeRope(CPuppeteer &a, CPuppeteer &b, float maxLength);
 
 private:
     b2Body *CreateBody(sf::Transformable const& entity, bool isStatic, bool isBullet);
-    void AddFixture(b2Shape const &shape, b2Body & body, SPuppeteerOptions const& options);
-    CPuppeteerUniquePtr Finalize(sf::Transformable & entity, b2Body * body);
+    void AddFixture(b2Shape const &shape, b2Body & body, SMaterial const& options);
+    CPuppeteerUniquePtr MakePuppeteer(sf::Transformable & entity, b2Body * body);
 
     IPhysicsWorld & m_world;
 };

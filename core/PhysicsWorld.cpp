@@ -102,6 +102,13 @@ void CPhysicsWorld::Tick(float deltaTime)
     CollectGarbage();
 }
 
+void CPhysicsWorld::Draw(b2Draw &draw)
+{
+    m_world->SetDebugDraw(&draw);
+    m_world->DrawDebugData();
+    m_world->SetDebugDraw(nullptr);
+}
+
 b2Body *CPhysicsWorld::CreateBody(const b2BodyDef &bodyDef) const
 {
     return m_world->CreateBody(&bodyDef);
@@ -123,7 +130,7 @@ sf::Vector2f CPhysicsWorld::GetScreenPosition(b2Body *body) const
     b2Vec2 pos = body->GetPosition();
     float ratio = m_pixelsPerMeter;
 
-    return sf::Vector2f(pos.x * ratio, pos.y * ratio);
+    return sf::Vector2f(ratio * pos.x, ratio * pos.y);
 }
 
 float CPhysicsWorld::GetScreenRotation(b2Body *body) const
@@ -146,14 +153,26 @@ float CPhysicsWorld::GetPhysicsRotation(const sf::Transformable &entity)const
 
 float CPhysicsWorld::ScaleToPhysics(float size)const
 {
-    return size / m_pixelsPerMeter;
+    float factor = 1.f / m_pixelsPerMeter;
+    return factor * size;
 }
 
 
-b2Vec2 CPhysicsWorld::ScaleToPhysics(sf::Vector2f const& size)const
+b2Vec2 CPhysicsWorld::ScaleToPhysics(sf::Vector2f const& value)const
 {
     float factor = 1.f / m_pixelsPerMeter;
-    return b2Vec2(factor * size.x, factor * size.y);
+    return b2Vec2(factor * value.x, factor * value.y);
+}
+
+float CPhysicsWorld::ScaleToGraphics(float value) const
+{
+    return m_pixelsPerMeter * value;
+}
+
+sf::Vector2f CPhysicsWorld::ScaleToGraphics(const b2Vec2 &value) const
+{
+    float factor = m_pixelsPerMeter;
+    return sf::Vector2f(factor * value.x, factor * value.y);
 }
 
 void CPhysicsWorld::CollectGarbage()

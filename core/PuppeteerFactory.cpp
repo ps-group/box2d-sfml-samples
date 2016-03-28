@@ -5,25 +5,73 @@ CPuppeteerFactory::CPuppeteerFactory(IPhysicsWorld &world)
 {
 }
 
-CPuppeteerUniquePtr CPuppeteerFactory::Make(sf::CircleShape &shape, SPuppeteerOptions const& options)
+void CPuppeteerFactory::MakeLandscape(const std::vector<sf::Vector2f> &points)
 {
-    b2CircleShape boxShape;
-    boxShape.m_radius = m_world.ScaleToPhysics(shape.getRadius());
-    auto body = CreateBody(shape, options.isStatic, false);
-    AddFixture(boxShape, *body, options);
+    b2BodyDef def;
+    def.type = b2_staticBody;
+    b2Body *body = m_world.CreateBody(def);
 
-    return Finalize(shape, body);
+    std::vector<b2Vec2> boxPoints(points.size());
+    for (size_t i = 0, n = points.size(); i < n; ++i)
+    {
+        boxPoints[i] = m_world.ScaleToPhysics(points[i]);
+    }
+
+    b2ChainShape shape;
+    shape.CreateChain(boxPoints.data(), int(boxPoints.size()));
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &shape;
+    body->CreateFixture(&fixtureDef);
 }
 
-CPuppeteerUniquePtr CPuppeteerFactory::Make(sf::RectangleShape &shape, const SPuppeteerOptions &options)
+CPuppeteerUniquePtr CPuppeteerFactory::MakeDynamic(sf::Transformable &entity)
 {
-    b2PolygonShape boxShape;
-    b2Vec2 size = m_world.ScaleToPhysics(shape.getSize());
-    boxShape.SetAsBox(size.x, size.y);
-    auto body = CreateBody(shape, options.isStatic, false);
-    AddFixture(boxShape, *body, options);
+    return MakePuppeteer(entity, CreateBody(entity, false, false));
+}
 
-    return Finalize(shape, body);
+CPuppeteerUniquePtr CPuppeteerFactory::MakeDynamic(sf::Sprite &sprite, SMaterial const& mat)
+{
+    auto body = CreateBody(sprite, false, false);
+    auto ret = MakePuppeteer(sprite, body);
+
+    sf::FloatRect bounds = sprite.getGlobalBounds();
+    bounds.top = 0;
+    bounds.left = 0;
+    ret->AddBox(bounds, mat);
+
+    return ret;
+}
+
+CPuppeteerUniquePtr CPuppeteerFactory::MakeStatic(sf::CircleShape &shape, const SMaterial &mat)
+{
+    auto body = CreateBody(shape, true, false);
+    auto ret = MakePuppeteer(shape, body);
+    ret->AddCircle(sf::Vector2f(0, 0), shape.getRadius(), mat);
+
+    return ret;
+}
+
+CPuppeteerUniquePtr CPuppeteerFactory::MakeDynamic(sf::CircleShape &shape, SMaterial const& mat)
+{
+    auto body = CreateBody(shape, false, false);
+    auto ret = MakePuppeteer(shape, body);
+    ret->AddCircle(sf::Vector2f(0, 0), shape.getRadius(), mat);
+
+    return ret;
+}
+
+CPuppeteerUniquePtr CPuppeteerFactory::MakeDynamic(sf::RectangleShape &shape, SMaterial const& mat)
+{
+    auto body = CreateBody(shape, false, false);
+    auto ret = MakePuppeteer(shape, body);
+
+    sf::FloatRect bounds = shape.getGlobalBounds();
+    bounds.top = 0;
+    bounds.left = 0;
+    ret->AddBox(bounds, mat);
+
+    return ret;
 }
 
 CJointUniquePtr CPuppeteerFactory::MakeRope(CPuppeteer &a, CPuppeteer &b, float maxLength)
@@ -47,7 +95,7 @@ b2Body *CPuppeteerFactory::CreateBody(const sf::Transformable &entity, bool isSt
     return m_world.CreateBody(def);
 }
 
-void CPuppeteerFactory::AddFixture(const b2Shape &shape, b2Body &body, const SPuppeteerOptions &options)
+void CPuppeteerFactory::AddFixture(const b2Shape &shape, b2Body &body, const SMaterial &options)
 {
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
@@ -59,7 +107,7 @@ void CPuppeteerFactory::AddFixture(const b2Shape &shape, b2Body &body, const SPu
     body.CreateFixture(&fixtureDef);
 }
 
-CPuppeteerUniquePtr CPuppeteerFactory::Finalize(sf::Transformable & entity, b2Body *body)
+CPuppeteerUniquePtr CPuppeteerFactory::MakePuppeteer(sf::Transformable & entity, b2Body *body)
 {
     auto ret = std::make_unique<CPuppeteer>(entity, m_world, body);
 

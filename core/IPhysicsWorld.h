@@ -17,8 +17,10 @@ public:
     virtual float GetScreenRotation(b2Body *body) const = 0;
     virtual b2Vec2 GetPhysicsPosition(sf::Transformable const& entity)const = 0;
     virtual float GetPhysicsRotation(sf::Transformable const& entity)const = 0;
-    virtual float ScaleToPhysics(float size)const = 0;
-    virtual b2Vec2 ScaleToPhysics(sf::Vector2f const& size)const = 0;
+    virtual float ScaleToPhysics(float value)const = 0;
+    virtual b2Vec2 ScaleToPhysics(sf::Vector2f const& value)const = 0;
+    virtual float ScaleToGraphics(float value)const = 0;
+    virtual sf::Vector2f ScaleToGraphics(b2Vec2 const& value)const = 0;
 };
 
 
