@@ -1,12 +1,17 @@
 #include <SFML/Graphics.hpp>
-#include "Application.h"
-#include "../scenes/PendulumScene.h"
-#include "../scenes/CarScene.h"
+#include "core/Application.h"
+#include "scenes/PendulumScene.h"
+#include "scenes/CarScene.h"
+
+#ifdef __linux__
 #include <unistd.h>
+#endif
 
 int main()
 {
+#ifdef __linux__
     chdir("../../box2d-demos/resources");
+#endif
 
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
